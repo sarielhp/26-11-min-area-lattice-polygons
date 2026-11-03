@@ -16,6 +16,11 @@ Two Rust programs, standard library plus `rayon` for the first:
   (direction, area) and a lower bound on the area in terms of lattice width to
   stop. Every reported polygon is reconstructed and validated.
 
+## Data
+
+[`data/`](data/README.md) contains the certified values of both sequences for
+3 ≤ k ≤ 511 and one validated optimal polygon for every k.
+
 ## Usage
 
 ```sh
@@ -40,8 +45,9 @@ vertices). The upper bounds only need to be feasible; they limit the search.
 an interruption. `--help` lists all options; `cargo test --release` runs the
 tests in each directory.
 
-Rough cost of the certified run on a 20-thread desktop CPU: K=300 in 17
-minutes with 1 GB of RAM; time grows like K⁶.
+Measured cost of the certified run on a 20-thread desktop CPU: K=300 in
+17 minutes with 1 GB of RAM; K=511 in 9.5 hours with 7.5 GB of RAM and
+337 GB of spill.
 
 ## License
 
