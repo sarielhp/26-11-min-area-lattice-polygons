@@ -15,9 +15,8 @@ starting with #.
 
 The values for n ≤ 150 agree with the OEIS. They come from two certified runs
 of `certify/`, for n ≤ 300 and n ≤ 511, using upper bounds from the heuristic;
-the two runs agree for n ≤ 300. Every polygon
-was re-validated independently of the solver: vertex count, strict convexity,
-and shoelace area.
+the two runs agree for n ≤ 300. Every polygon was re-validated independently
+of the solver: vertex count, strict convexity, and shoelace area.
 
 ## Conjectured values (`conjectured/`), not proven minimal
 
@@ -26,11 +25,17 @@ and shoelace area.
 - `b070911_heuristic.txt`, `b063984_heuristic.txt`,
   `a070911_heuristic_polygons.txt`: the full heuristic sequence, 3 ≤ n ≤ 1000.
 
-Each value is the doubled area of an explicit, validated convex lattice
-polygon, so it is a proven **upper bound**. It is the exact minimum over
-polygons whose edge vectors lie in a square of half-side
-⌈√(2n/3)⌉ (computed with `modular/` or `heuristic/`), not over all
-polygons. For n ≤ 511 it equals the certified minimum for 484 of the 509 values,
-including every n ≥ 296; the 25 exceptions (n = 211 and 272 ≤ n ≤ 295) exceed the minimum by at most 0.121%. Most of the values
-for n > 511 are probably optimal (we expect more than 90%), but some
-may be slightly too large. Each file repeats this remark in its header.
+The heuristic is much faster than the certificate: it computes the exact
+minimum only over polygons whose edge vectors lie in a square of half-side
+⌈√(2n/3)⌉ (with `modular/` or `heuristic/`), not over all polygons. That
+takes about a minute on one core for n = 511 and a few hours for all
+n ≤ 1000, while certifying all n ≤ 511 takes about 10 hours and 337 GB of
+disk. Each heuristic value is the doubled area of an explicit, validated
+convex lattice polygon, so it is a proven **upper bound** on the minimum.
+
+How good is this bound? For the 509 values 3 ≤ n ≤ 511, where the minimum is
+now certified, the heuristic bound equals it for 484 of them (95.1%),
+including every n ≥ 296. The 25 exceptions (n = 211 and 272 ≤ n ≤ 295)
+exceed the minimum by at most 0.121%. We therefore expect most of the values
+for n > 511 (probably more than 90%) to be optimal, but some may be slightly
+too large. Each file repeats this remark in its header.
