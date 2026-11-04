@@ -6,7 +6,7 @@
 # lattice-width dynamic program over convex chains (count-major order,
 # transitions through empty triangles, per-count area caps, and an
 # area/lattice-width stopping bound). Values for n <= 150 agree with the
-# earlier OEIS table. Programs and data:
+# OEIS table that predates this work. Programs and data:
 # https://github.com/sarielhp/26-11-min-area-lattice-polygons
 # Format: "n A070911(n) (x1,y1),...,(xn,yn)", vertices counterclockwise.
 3 1 (0,0),(0,1),(-1,1)

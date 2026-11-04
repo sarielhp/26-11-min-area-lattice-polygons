@@ -13,7 +13,7 @@ starting with #.
 - [`a070911_polygons.txt`](a070911_polygons.txt): one optimal polygon per n, as
   `n doubled-area (x1,y1),(x2,y2),...`, vertices in counterclockwise order.
 
-The values for n ≤ 150 agree with the OEIS. They come from two certified runs
+The values for n ≤ 150 agree with the OEIS table that predates this work. They come from two certified runs
 of `certify/`, for n ≤ 300 and n ≤ 511, using upper bounds from the heuristic;
 the two runs agree for n ≤ 300. Every polygon was re-validated independently
 of the solver: vertex count, strict convexity, and shoelace area.
