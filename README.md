@@ -25,6 +25,21 @@ Three Rust programs (standard library; `heuristic/` also uses `rayon`):
   shares one square in a single run, with two tables in
   memory and the rest streamed to disk.
 
+## Heuristic upper bounds
+
+Certifying the minimum is expensive: one run for all n ≤ 511 takes about 10
+hours and 337 GB of disk. The heuristic is much cheaper: it computes the exact
+minimum only over polygons whose edge vectors lie in a square of half-side
+⌈√(2n/3)⌉, which takes about a minute on one core for n = 511, and a few hours
+for all n ≤ 1000. Each heuristic value is the area of an explicit polygon, so
+it is an upper bound on the true minimum; the certificate uses these bounds as
+input, to limit its search. For the 509 values 3 ≤ n ≤ 511 that are now
+certified, the heuristic bound equals the minimum for 484 of them (95.1%),
+including every n ≥ 296; the 25 exceptions (n = 211 and 272 ≤ n ≤ 295) exceed
+the minimum by at most 0.121%. This is why the heuristic values for
+512 ≤ n ≤ 1000 in `data/conjectured/` are likely, though not proven, to be
+mostly optimal.
+
 ## Data
 
 [`data/`](data/README.md) holds the certified values of both sequences for
