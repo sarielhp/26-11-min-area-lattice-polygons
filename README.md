@@ -1,54 +1,69 @@
 # Minimum-area convex lattice polygons
 
-Programs that compute, for each k, the minimum area of a convex lattice
-polygon with k vertices: OEIS [A070911](https://oeis.org/A070911) (twice the
+Programs and data for the minimum area of a convex lattice polygon with a
+given number of vertices: OEIS [A070911](https://oeis.org/A070911) (twice the
 minimum area) and [A063984](https://oeis.org/A063984) (the minimum number of
-interior lattice points, (A070911(k) − k + 2)/2).
+interior lattice points, which equals (A070911 − number of vertices + 2)/2).
 
-Two Rust programs, standard library plus `rayon` for the first:
+## Programs
 
-- **`heuristic/`** (`lattice-classic-parallel`): fast upper bounds. An exact
-  dynamic program over k-gons whose edge vectors lie in a box of half-side
-  ⌈√(2k/3)⌉. Gives feasible polygons, not proofs of optimality.
-- **`certify/`** (`lattice-layered`): certified minima for all k ≤ K in one
-  run. A dynamic program over convex lattice chains by lattice width, filled
-  in order of the number of chain vertices, with Pareto frontiers of
-  (direction, area) and a lower bound on the area in terms of lattice width to
-  stop. Every reported polygon is reconstructed and validated.
+Three Rust programs (standard library; `heuristic/` also uses `rayon`):
+
+- **`certify/`** (`lattice-layered`): certified minima for every number of
+  vertices up to a chosen largest one, in one run. A dynamic program over
+  convex lattice chains bounded by lattice width, filled in order of the number
+  of chain vertices, with Pareto frontiers of (direction, area), per-count area
+  caps from feasible polygons, and a lower bound on the area in terms of the
+  lattice width to stop. Every reported polygon is reconstructed and validated.
+- **`modular/`** (`lattice-parametric-dp`): fast feasible polygons (upper
+  bounds). The exact minimum over polygons whose edge vectors lie in a square
+  of half-side ⌈√(2 × vertices / 3)⌉, computed by a dynamic program that keeps
+  the number of edges only modulo a small modulus, with a penalty on the
+  number of edges. Small memory, one number of vertices per run.
+- **`heuristic/`** (`lattice-classic-parallel`): the same restricted problem
+  with the full count index, multi-threaded; `--hybrid` computes every number
+  of vertices that shares one square in a single run, with two tables in
+  memory and the rest streamed to disk.
 
 ## Data
 
-[`data/`](data/README.md) contains the certified values of both sequences for
-3 ≤ k ≤ 511 and one validated optimal polygon for every k, and, separately in
-`data/conjectured/`, heuristic upper bounds (conjectured values) up to k = 1000.
+[`data/`](data/README.md) holds the certified values of both sequences for 3
+to 511 vertices, with one validated optimal polygon each, and, separately in
+`data/conjectured/`, heuristic upper bounds (not proven minimal) up to 1000
+vertices.
 
-## Usage
+## Reproducing the results
+
+Requires Rust (cargo) and Ruby. From the repository root:
 
 ```sh
-cargo build --release --manifest-path heuristic/Cargo.toml
-cargo build --release --manifest-path certify/Cargo.toml
-
-K=200
-for k in $(seq 3 $K); do
-  area=$(heuristic/target/release/lattice-classic-parallel --k $k --threads 8 --memory-mib 16384 |
-         grep -o '"doubled_area":[0-9]*' | cut -d: -f2)
-  echo "$k $area"
-done > upper.txt
-
-certify/target/release/lattice-layered --k $K --upper upper.txt --spill ./spill --save polygons
+scripts/build                              # builds all three programs
+scripts/certified 300 --spill /big/disk/spill   # certified values, 3..300 vertices
+scripts/conjectured 512 1000               # heuristic values, 512..1000 vertices
 ```
 
-The certified run prints one JSON line with all doubled areas from k=3 and
-writes one polygon per k to `polygons/kNNNNNN.txt` (header, vertex count,
-vertices). The upper bounds only need to be feasible; they limit the search.
-`--spill DIR` holds finished layers on disk for witness reconstruction (about
-23 GB at K=300, growing like K⁵) and a checkpoint: rerun with `--resume` after
-an interruption. `--help` lists all options; `cargo test --release` runs the
-tests in each directory.
+`scripts/certified LARGEST` computes upper bounds with `modular/`, runs
+`certify/` once up to LARGEST vertices, writes `reproduced/b070911.txt`,
+`reproduced/b063984.txt` and `reproduced/a070911_polygons.txt` with every
+polygon re-validated, and compares them with `data/`. The spill directory holds
+finished layers for polygon reconstruction: about 23 GB for 300 vertices and
+337 GB for 511; it is removed at the end.
 
-Measured cost of the certified run on a 20-thread desktop CPU: K=300 in
-17 minutes with 1 GB of RAM; K=511 in 9.5 hours with 7.5 GB of RAM and
-337 GB of spill.
+`scripts/conjectured FIRST LAST` runs `modular/` as parallel single-threaded
+jobs (largest first, within `--memory-cap-mib`, default 14336), writes the
+`*_conjectured.txt` tables to `reproduced/`, and compares them with
+`data/conjectured/`.
+
+Measured on a 20-thread desktop CPU (Intel Core Ultra 7 265):
+
+| Run | Time | Memory | Disk |
+|---|---:|---:|---:|
+| certified, up to 300 vertices | about 20 minutes | 1 GB | 23 GB |
+| certified, up to 511 vertices | about 10 hours | 7.5 GB | 337 GB |
+| conjectured, 512 to 1000 vertices | several hours | under 14 GB | none |
+
+Each program also runs on its own; `--help` lists its options, and
+`cargo test --release` in each directory runs its tests.
 
 ## License
 

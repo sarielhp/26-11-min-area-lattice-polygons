@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Builds the three solvers (heuristic/, certify/, modular/) in release mode.
+require_relative 'lib/common'
+
+Repro.build!
+puts Repro::BIN.values

@@ -1,5 +1,6 @@
 mod classic;
 mod geometry;
+mod hybrid;
 #[cfg(test)]
 mod tests;
 
@@ -19,6 +20,9 @@ struct Options {
     domain_budget: Option<i32>,
     estimate_memory: bool,
     all_splits: bool,
+    hybrid: Option<i32>,
+    spill: Option<String>,
+    out: Option<String>,
 }
 
 fn options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>, Error> {
@@ -33,6 +37,9 @@ fn options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>, Er
         domain_budget: None,
         estimate_memory: false,
         all_splits: false,
+        hybrid: None,
+        spill: None,
+        out: None,
     };
     while let Some(flag) = args.next() {
         if flag == "--estimate-memory" {
@@ -56,6 +63,8 @@ fn options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>, Er
                 Defaults: k=200, heuristic pool, up to 4 threads, memory=4096 MiB.\n\
                 Heuristic box=sxs, s=ceil(sqrt(2*k/3)); global coverage is not proved.\n\
                 Heuristic odd k joins only (k-1)/2 + (k+1)/2 edges; --all-splits joins every split.\n\
+                --hybrid S --spill DIR --out DIR: count-major run for every k with box side S;\n\
+                writes DIR/kNNNNNN.txt witnesses and one JSON line with all areas.\n\
                 Classic exact-count DP; --threads 1 uses serial updates.\n\
                 --estimate-memory: report DP allowance including reconstruction, without solving.\n\
                 Output: one JSON record. Witness: count, then one x y per line."
@@ -70,6 +79,9 @@ fn options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>, Er
             "--threads" => result.threads = value.parse()?,
             "--memory-mib" => result.memory_mib = value.parse()?,
             "--witness" => result.witness = Some(value),
+            "--hybrid" => result.hybrid = Some(value.parse()?),
+            "--spill" => result.spill = Some(value),
+            "--out" => result.out = Some(value),
             "--box" => {
                 result.heuristic_pool = false;
                 result.domain_budget = None;
@@ -207,6 +219,58 @@ fn memory_allowance(pools: &[Vec<Point>], options: &Options) -> Result<usize, Er
     Ok(bytes.div_ceil(1048576))
 }
 
+/// Box side of the heuristic pool for count k: s = ceil(sqrt(2k/3)).
+fn heuristic_side(k: usize) -> i32 {
+    let mut side = 1;
+    while 3 * side * side < 2 * k as i32 {
+        side += 1;
+    }
+    side
+}
+
+fn run_hybrid(options: &Options, side: i32, started: Instant) -> Result<(), Error> {
+    let spill = options.spill.as_ref().ok_or("--hybrid needs --spill DIR")?;
+    let out = options.out.as_ref().ok_or("--hybrid needs --out DIR")?;
+    let ks: Vec<usize> = (3..=1000).filter(|&k| heuristic_side(k) == side).collect();
+    if ks.is_empty() {
+        return Err("no count uses that box side".into());
+    }
+    let pool = upper_pool(side, side);
+    let report = hybrid::run(&pool, &ks, std::path::Path::new(spill))?;
+    std::fs::create_dir_all(out)?;
+    let mut areas = Vec::new();
+    for r in &report.results {
+        let mut file =
+            std::fs::File::create(std::path::Path::new(out).join(format!("k{:06}.txt", r.k)))?;
+        writeln!(file, "{}", r.vertices.len())?;
+        for p in &r.vertices {
+            writeln!(file, "{} {}", p.x, p.y)?;
+        }
+        areas.push(format!("[{},{}]", r.k, r.area2));
+    }
+    let peak = std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|text| {
+            text.lines()
+                .find(|s| s.starts_with("VmHWM:"))
+                .and_then(|s| s.split_whitespace().nth(1))
+                .and_then(|s| s.parse::<u64>().ok())
+        })
+        .unwrap_or(0);
+    println!(
+        "{{\"side\":{side},\"k_first\":{},\"k_last\":{},\"threads\":{},\"areas\":[{}],\"records\":{},\"stream_bytes\":{},\"peak_table_bytes\":{},\"seconds\":{:.3},\"peak_rss_kib\":{peak}}}",
+        ks[0],
+        ks[ks.len() - 1],
+        options.threads,
+        areas.join(","),
+        report.records,
+        report.stream_bytes,
+        report.peak_table_bytes,
+        started.elapsed().as_secs_f64()
+    );
+    Ok(())
+}
+
 fn run(options: &Options, started: Instant) -> Result<(), Error> {
     let pools: Vec<_> = options
         .rectangles
@@ -265,7 +329,10 @@ fn main() {
         let workers = rayon::ThreadPoolBuilder::new()
             .num_threads(options.threads)
             .build()?;
-        workers.install(|| run(&options, started))
+        workers.install(|| match options.hybrid {
+            Some(side) => run_hybrid(&options, side, started),
+            None => run(&options, started),
+        })
     });
     if let Err(error) = outcome {
         eprintln!("error: {error}");

@@ -294,3 +294,33 @@ fn explicit_domains_keep_every_odd_split() {
     assert_eq!(max_count(&fixed), 30);
     assert!(!balanced_split(&fixed));
 }
+
+#[test]
+fn hybrid_count_major_matches_classic_for_every_count_of_a_box_side() {
+    let spill = std::env::temp_dir().join(format!("hybrid-test-{}", std::process::id()));
+    for side in 2..=6 {
+        let ks: Vec<usize> = (3..=60).filter(|&k| heuristic_side(k) == side).collect();
+        let pool = upper_pool(side, side);
+        let report = hybrid::run(&pool, &ks, &spill).unwrap();
+        assert_eq!(report.results.len(), ks.len());
+        for r in &report.results {
+            let mut args = vec![
+                "--k".to_string(),
+                r.k.to_string(),
+                "--threads".to_string(),
+                "1".to_string(),
+            ];
+            args.push("--heuristic".to_string());
+            let options = options(args.into_iter()).unwrap().unwrap();
+            let pools: Vec<_> = options
+                .rectangles
+                .iter()
+                .map(|&(a, b)| upper_pool(a, b))
+                .collect();
+            let (win, _) = optimize(&pools, &options).unwrap();
+            assert_eq!(r.area2, win.area2, "k={}", r.k);
+            assert_eq!(r.vertices.len(), r.k);
+        }
+    }
+    let _ = std::fs::remove_dir_all(&spill);
+}

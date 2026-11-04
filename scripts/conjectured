@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Reproduces the heuristic (conjectured) values for a range of numbers of
+# vertices with the modular solver, as parallel single-threaded jobs,
+# largest first.
+#
+#   scripts/conjectured FIRST LAST [--jobs J] [--memory-cap-mib M] [--out DIR]
+#
+# `scripts/conjectured 512 1000` reproduces data/conjectured/ (several hours
+# on a 20-thread desktop CPU within 14 GB); `scripts/conjectured 3 1000`
+# gives the full heuristic sequence. Writes OUT/b070911_conjectured.txt,
+# OUT/b063984_conjectured.txt and OUT/a070911_conjectured_polygons.txt, with
+# every polygon re-validated, then compares with data/conjectured/.
+# These are upper bounds attained by explicit polygons, not proven minima.
+
+require 'optparse'
+require_relative 'lib/common'
+require_relative 'lib/modular_jobs'
+
+options = { jobs: Etc.nprocessors, cap: 14_336, out: File.expand_path('reproduced') }
+OptionParser.new do |o|
+  o.banner = 'Usage: scripts/conjectured FIRST LAST [options]'
+  o.on('--jobs J', Integer, 'parallel jobs (default: all CPUs)') { |v| options[:jobs] = v }
+  o.on('--memory-cap-mib M', Integer, 'memory of running jobs (default 14336)') { |v| options[:cap] = v }
+  o.on('--out DIR', 'output directory (default ./reproduced)') { |v| options[:out] = File.expand_path(v) }
+end.parse!
+first, last = ARGV.map(&:to_i)
+abort 'Usage: scripts/conjectured FIRST LAST [options]' unless ARGV.size == 2 && first >= 3 && last <= 1000 && first <= last
+$stdout.sync = true
+Repro.build!
+
+work = File.join(options[:out], 'conjectured-work')
+results = ModularJobs.new(work, jobs: options[:jobs], cap_mib: options[:cap]).run(first..last)
+rows = (first..last).map do |n|
+  area2 = results.fetch(n).fetch('doubled_area')
+  points = Repro.read_polygon(File.join(work, format('k%06d.txt', n)), n)
+  Repro.check!(n, area2, points)
+  [n, area2, points]
+end
+header = "# Heuristic values (upper bounds, not proven minimal) for #{first}..#{last} vertices, " \
+         "reproduced by scripts/conjectured.\n"
+Repro.write_tables(options[:out], '_conjectured', header, rows)
+puts "tables written to #{options[:out]}"
+published = Repro.read_bfile(File.join(Repro::ROOT, 'data/conjectured/b070911_heuristic.txt'))
+same = Repro.same?('heuristic V(n)', rows.to_h { |n, a, _| [n, a] }, published)
+exit(same ? 0 : 1)
