@@ -63,6 +63,6 @@ end
 header = "# Certified minima for 3..#{largest} vertices, reproduced by scripts/certified.\n"
 Repro.write_tables(out, '', header, rows)
 puts "tables written to #{out}"
-same = Repro.same?('certified V(n)', rows.to_h { |n, a, _| [n, a] },
+same = Repro.same?('certified values', rows.to_h { |n, a, _| [n, a] },
                    Repro.read_bfile(File.join(Repro::ROOT, 'data/b070911.txt')))
 exit(same ? 0 : 1)

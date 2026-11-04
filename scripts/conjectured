@@ -43,5 +43,5 @@ header = "# Heuristic values (upper bounds, not proven minimal) for #{first}..#{
 Repro.write_tables(options[:out], '_conjectured', header, rows)
 puts "tables written to #{options[:out]}"
 published = Repro.read_bfile(File.join(Repro::ROOT, 'data/conjectured/b070911_heuristic.txt'))
-same = Repro.same?('heuristic V(n)', rows.to_h { |n, a, _| [n, a] }, published)
+same = Repro.same?('heuristic values', rows.to_h { |n, a, _| [n, a] }, published)
 exit(same ? 0 : 1)
