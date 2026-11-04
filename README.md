@@ -19,7 +19,8 @@ Two Rust programs, standard library plus `rayon` for the first:
 ## Data
 
 [`data/`](data/README.md) contains the certified values of both sequences for
-3 ≤ k ≤ 511 and one validated optimal polygon for every k.
+3 ≤ k ≤ 511 and one validated optimal polygon for every k, and, separately in
+`data/conjectured/`, heuristic upper bounds (conjectured values) up to k = 1000.
 
 ## Usage
 

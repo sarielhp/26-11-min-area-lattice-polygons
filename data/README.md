@@ -12,3 +12,19 @@ certified run with K=300 and for n ≤ 511 from a run with K=511 (`certify/`,
 using upper bounds from `heuristic/`); the two runs agree on n ≤ 300. Every
 polygon was re-validated independently of the solver: vertex count, strict
 convexity, and shoelace area.
+
+## Conjectured values (`conjectured/`), NOT proven minimal
+
+- `b070911_conjectured.txt`, `b063984_conjectured.txt`,
+  `a070911_conjectured_polygons.txt`: n = 512..1000.
+- `b070911_heuristic.txt`, `b063984_heuristic.txt`,
+  `a070911_heuristic_polygons.txt`: the full heuristic sequence, n = 3..1000.
+
+Each value is the doubled area of an explicit, validated convex lattice n-gon,
+so it is a proven **upper bound**. It is the exact minimum over polygons whose
+edge vectors lie in [-s,s]^2, s = ceil(sqrt(2n/3)) (computed with `heuristic/`
+or the modular-penalty solver), not over all polygons. For n <= 511 it equals
+the certified minimum for 484 of 509 counts, including every n >= 296; the 25
+exceptions (n = 211 and 272..295) exceed the minimum by at most 0.121%. Most of
+the values for n > 511 are probably optimal (we expect more than 90%), but some
+may be slightly too large. Each file repeats this remark in its header.
