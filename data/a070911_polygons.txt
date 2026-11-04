@@ -1,3 +1,14 @@
+# A070911: one optimal convex lattice polygon with n vertices for each n.
+# Table of n, a(n) for n = 3..511.
+# Certified (globally optimal) values. Each value is attained by an explicit
+# convex lattice polygon, validated independently (vertex count, strict
+# convexity, shoelace area), and its minimality is certified by a
+# lattice-width dynamic program over convex chains (count-major order,
+# transitions through empty triangles, per-count area caps, and an
+# area/lattice-width stopping bound). Values for n <= 150 agree with the
+# earlier OEIS table. Programs and data:
+# https://github.com/sarielhp/26-11-min-area-lattice-polygons
+# Format: "n A070911(n) (x1,y1),...,(xn,yn)", vertices counterclockwise.
 3 1 (0,0),(0,1),(-1,1)
 4 2 (0,0),(0,1),(-1,1),(-1,0)
 5 5 (0,0),(1,2),(0,2),(-1,1),(-1,0)
