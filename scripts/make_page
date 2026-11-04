@@ -1,0 +1,91 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Writes index.html, the GitHub Pages front page, from the data files:
+# an explanation, a plot of A(n)/n^3, a table of selected values, and links.
+#
+#   scripts/make_page
+
+require 'json'
+require_relative 'lib/common'
+
+ROOT = Repro::ROOT
+CERTIFIED = Repro.read_bfile(File.join(ROOT, 'data/b070911.txt'))
+HEURISTIC = Repro.read_bfile(File.join(ROOT, 'data/conjectured/b070911_heuristic.txt'))
+LIMIT = 0.0185067 # estimate of lim A(n)/n^3 by Barany and Tokushige
+X0 = 20
+X1 = 1000
+Y0 = 0.0150
+Y1 = 0.0188
+W = 760
+H = 340
+PAD = { l: 64, r: 20, t: 16, b: 44 }.freeze
+
+def ratio(count, area2) = area2 / 2.0 / (count**3)
+def px(count) = PAD[:l] + ((count - X0) * (W - PAD[:l] - PAD[:r]) / (X1 - X0).to_f)
+def py(value) = PAD[:t] + ((Y1 - value) * (H - PAD[:t] - PAD[:b]) / (Y1 - Y0))
+
+def polyline(points, css)
+  coords = points.map { |n, y| format('%<x>.1f,%<y>.1f', x: px(n), y: py(y)) }.join(' ')
+  %(<polyline class="#{css}" points="#{coords}"/>)
+end
+
+def axes
+  grid = (0..7).map do |i|
+    y = Y0 + (i * 0.0005)
+    %(<line class="grid" x1="#{PAD[:l]}" x2="#{W - PAD[:r]}" y1="#{py(y).round(1)}" y2="#{py(y).round(1)}"/>) +
+      %(<text class="tick" x="#{PAD[:l] - 8}" y="#{(py(y) + 4).round(1)}" text-anchor="end">#{format('%.4f', y)}</text>)
+  end
+  xticks = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000].map do |n|
+    %(<text class="tick" x="#{px(n).round(1)}" y="#{H - PAD[:b] + 18}" text-anchor="middle">#{n}</text>)
+  end
+  grid.join + xticks.join +
+    %(<text class="axis-label" x="#{(W + PAD[:l]) / 2}" y="#{H - 6}" text-anchor="middle">n (number of vertices)</text>)
+end
+
+def chart
+  certified = CERTIFIED.select { |n, _| n >= X0 }.sort.map { |n, a| [n, ratio(n, a)] }
+  conjectured = HEURISTIC.select { |n, _| n > CERTIFIED.keys.max }.sort.map { |n, a| [n, ratio(n, a)] }
+  limit_y = py(LIMIT).round(1)
+  <<~SVG
+    <svg viewBox="0 0 #{W} #{H}" role="img" aria-labelledby="chart-title" id="chart">
+      #{axes}
+      <line class="limit" x1="#{PAD[:l]}" x2="#{W - PAD[:r]}" y1="#{limit_y}" y2="#{limit_y}"/>
+      <text class="note" x="#{W - PAD[:r] - 4}" y="#{limit_y - 6}" text-anchor="end">estimated limit 0.0185067</text>
+      #{polyline(certified, 'line certified')}
+      #{polyline(conjectured, 'line conjectured')}
+      <line class="cross" id="cross" x1="0" x2="0" y1="#{PAD[:t]}" y2="#{H - PAD[:b]}" visibility="hidden"/>
+      <circle class="dot" id="dot" r="4.5" visibility="hidden"/>
+      <rect id="hit" x="#{PAD[:l]}" y="#{PAD[:t]}" width="#{W - PAD[:l] - PAD[:r]}" height="#{H - PAD[:t] - PAD[:b]}" fill="transparent"/>
+    </svg>
+  SVG
+end
+
+def table_rows
+  ns = [100, 150, 200, 250, 300, 350, 400, 450, 500, 511, 600, 700, 800, 900, 1000]
+  ns.map do |n|
+    a = HEURISTIC.fetch(n)
+    certified = CERTIFIED.key?(n)
+    a = CERTIFIED[n] if certified
+    status = certified ? 'certified' : 'conjectured'
+    "<tr><td>#{n}</td><td>#{a}</td><td>#{(a - n + 2) / 2}</td><td>#{format('%.5f', ratio(n, a))}</td>" \
+      "<td class=\"#{status}\">#{status}</td></tr>"
+  end.join("\n")
+end
+
+def point_data
+  HEURISTIC.select { |n, _| n >= X0 }.sort.map do |n, a|
+    a = CERTIFIED.fetch(n, a)
+    [n, a, CERTIFIED.key?(n) ? 1 : 0]
+  end
+end
+
+template = File.read(File.join(__dir__, 'lib/page_template.html'))
+values = { 'CHART' => chart, 'ROWS' => table_rows, 'DATA' => JSON.generate(point_data),
+           'X0' => X0.to_s, 'X1' => X1.to_s, 'Y0' => Y0.to_s, 'Y1' => Y1.to_s, 'W' => W.to_s, 'H' => H.to_s,
+           'PL' => PAD[:l].to_s, 'PR' => PAD[:r].to_s, 'PT' => PAD[:t].to_s, 'PB' => PAD[:b].to_s,
+           'LAST' => CERTIFIED.keys.max.to_s, 'NEXT' => (CERTIFIED.keys.max + 1).to_s }
+page = template.gsub(/\{\{(\w+)\}\}/) { values.fetch(Regexp.last_match(1)) }
+File.write(File.join(ROOT, 'index.html'), page)
+FileUtils.touch(File.join(ROOT, '.nojekyll'))
+puts "wrote #{File.join(ROOT, 'index.html')}"

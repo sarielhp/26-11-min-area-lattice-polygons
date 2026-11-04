@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minimum-area convex lattice polygons</title>
+<meta name="description" content="Certified minimum areas of convex lattice n-gons for n up to 511 (OEIS A070911, A063984), conjectured values to n = 1000, polygons, and programs.">
+<style>
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb;
+  --panel: #f3f2ef;
+  --border: #dddcd7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77766f;
+  --grid: #e6e5e1;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --link: #1f5fae;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel: #242423;
+    --border: #3a3a38;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #9a998f;
+    --grid: #2f2f2d;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --link: #7fb3f0;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1a1a19;
+  --panel: #242423;
+  --border: #3a3a38;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #9a998f;
+  --grid: #2f2f2d;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --link: #7fb3f0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.25rem; margin: 40px 0 12px; }
+p { margin: 0 0 14px; color: var(--text-secondary); }
+p.lead { font-size: 1.1rem; color: var(--text-primary); }
+a { color: var(--link); }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9rem; }
+pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 24px 0; }
+.fact { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.fact b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.fact span { color: var(--text-secondary); font-size: 0.9rem; }
+figure { margin: 8px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px; }
+.swatch { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.swatch.certified { background: var(--series-1); }
+.swatch.conjectured { background: var(--series-2); }
+.swatch.limit { background: none; border-top: 2px dashed var(--text-muted); height: 0; }
+.chart-wrap { position: relative; }
+svg { width: 100%; height: auto; display: block; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.tick { fill: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.axis-label, .note { fill: var(--text-secondary); font-size: 12px; }
+.line { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.line.certified { stroke: var(--series-1); }
+.line.conjectured { stroke: var(--series-2); }
+.limit { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.cross { stroke: var(--text-muted); stroke-width: 1; }
+.dot { fill: var(--surface); stroke: var(--text-primary); stroke-width: 2; }
+.tooltip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 9px; font-size: 0.85rem; line-height: 1.4; color: var(--text-primary);
+  white-space: nowrap; display: none; }
+figcaption { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+th:last-child, td:last-child { text-align: left; }
+th { color: var(--text-secondary); font-weight: 600; }
+td.certified::before, td.conjectured::before { content: ""; display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+td.certified::before { background: var(--series-1); }
+td.conjectured::before { background: var(--series-2); }
+.table-wrap { overflow-x: auto; }
+ul { padding-left: 20px; color: var(--text-secondary); }
+li { margin: 4px 0; }
+footer { margin-top: 48px; font-size: 0.85rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>Minimum-area convex lattice polygons</h1>
+<p class="lead">What is the smallest area of a convex polygon with n vertices, all at integer points?
+We computed the exact answer for every n up to {{LAST}}, and very likely answers up to n = 1000.</p>
+<p>The doubled minimum area is OEIS <a href="https://oeis.org/A070911">A070911</a>; the minimum number of
+interior lattice points, (A070911(n) − n + 2)/2, is <a href="https://oeis.org/A063984">A063984</a>.
+Before this work the values were known for n ≤ 150.</p>
+
+<div class="facts">
+  <div class="fact"><b>3 – {{LAST}}</b><span>certified minima, each with an optimal polygon</span></div>
+  <div class="fact"><b>{{NEXT}} – 1000</b><span>conjectured values (proven upper bounds)</span></div>
+  <div class="fact"><b>484 / 509</b><span>heuristic values that were optimal where certified</span></div>
+</div>
+
+<h2 id="chart-title">The minimum area grows like n³</h2>
+<figure>
+  <div class="legend">
+    <span><span class="swatch certified"></span>certified, n ≤ {{LAST}}</span>
+    <span><span class="swatch conjectured"></span>conjectured, n &gt; {{LAST}}</span>
+    <span><span class="swatch limit"></span>Bárány–Tokushige estimate of the limit</span>
+  </div>
+  <div class="chart-wrap">
+    {{CHART}}
+    <div class="tooltip" id="tip"></div>
+  </div>
+  <figcaption>Minimum area divided by n³, for 20 ≤ n ≤ 1000 (smaller n fluctuate). The ratio rises slowly
+  toward about 0.0185, the value Bárány and Tokushige estimate for its limit. Hover for values.</figcaption>
+</figure>
+
+<h2>Selected values</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>n</th><th>A070911(n)</th><th>A063984(n)</th><th>area / n³</th><th>status</th></tr></thead>
+  <tbody>
+{{ROWS}}
+  </tbody>
+</table>
+</div>
+
+<h2>Download</h2>
+<ul>
+  <li>Certified values, 3 ≤ n ≤ {{LAST}}: <a href="data/b070911.txt">A070911</a>,
+    <a href="data/b063984.txt">A063984</a>, <a href="data/a070911_polygons.txt">all polygons in one file</a>,
+    <a href="https://github.com/sarielhp/26-11-min-area-lattice-polygons/tree/main/data/polygons/certified">one file per n</a>.</li>
+  <li>Conjectured values, {{LAST}} &lt; n ≤ 1000: <a href="data/conjectured/b070911_conjectured.txt">A070911</a>,
+    <a href="data/conjectured/b063984_conjectured.txt">A063984</a>,
+    <a href="data/conjectured/a070911_conjectured_polygons.txt">polygons</a>.</li>
+  <li>Full heuristic sequence, 3 ≤ n ≤ 1000: <a href="data/conjectured/b070911_heuristic.txt">A070911</a>,
+    <a href="data/conjectured/b063984_heuristic.txt">A063984</a>,
+    <a href="https://github.com/sarielhp/26-11-min-area-lattice-polygons/tree/main/data/polygons/heuristic">one polygon file per n</a>.</li>
+</ul>
+<p>Each file is plain text: one line per n, with comment lines starting with # that say exactly what it
+contains. The <a href="https://github.com/sarielhp/26-11-min-area-lattice-polygons/blob/main/data/README.md">data
+description</a> has the details.</p>
+
+<h2>How the values were computed</h2>
+<p><b>Certified values.</b> A dynamic program over convex lattice chains, organized by lattice width,
+keeps for each chain end the best trade-offs between direction and area, extends chains only through
+triangles without interior lattice points, and fills its table in order of the number of chain vertices.
+A lower bound on the area in terms of the lattice width tells it when to stop. Every optimal polygon is
+reconstructed and checked independently. Certifying all n ≤ 511 took about 10 hours on a desktop
+computer.</p>
+<p><b>Conjectured values.</b> A much faster heuristic finds the best polygon whose edge vectors all lie in a
+small square of half-side ⌈√(2n/3)⌉. Each value is the area of an explicit polygon, so it is a proven upper
+bound. Where the true minimum is known (n ≤ 511), the heuristic was optimal for 484 of 509 values, including
+every n ≥ 296, and never more than 0.121% too large. We expect most values beyond n = {{LAST}} to be
+optimal, but they are not proven.</p>
+
+<h2>Reproduce</h2>
+<p>The programs (Rust) and scripts (Ruby) are in the
+<a href="https://github.com/sarielhp/26-11-min-area-lattice-polygons">repository</a>:</p>
+<pre>scripts/build                                 # build the programs
+scripts/certified 300 --spill /big/disk/spill  # certified values, 3 ≤ n ≤ 300
+scripts/conjectured 512 1000                  # heuristic values, 512 ≤ n ≤ 1000</pre>
+<p>The <a href="https://github.com/sarielhp/26-11-min-area-lattice-polygons/blob/main/REPRODUCE.md">reproduction
+guide</a> lists the hardware we used, how to compile, and the time, memory and disk each run needs.</p>
+
+<footer>Sariel Har-Peled, 2026. Code under the MIT license.
+<a href="https://github.com/sarielhp/26-11-min-area-lattice-polygons">Source and data on GitHub</a>.</footer>
+</main>
+<script>
+(() => {
+  const data = {{DATA}};
+  const X0 = {{X0}}, X1 = {{X1}}, Y0 = {{Y0}}, Y1 = {{Y1}}, W = {{W}}, H = {{H}};
+  const PL = {{PL}}, PR = {{PR}}, PT = {{PT}}, PB = {{PB}};
+  const svg = document.getElementById('chart');
+  const hit = document.getElementById('hit');
+  const cross = document.getElementById('cross');
+  const dot = document.getElementById('dot');
+  const tip = document.getElementById('tip');
+  const px = n => PL + (n - X0) * (W - PL - PR) / (X1 - X0);
+  const py = y => PT + (Y1 - y) * (H - PT - PB) / (Y1 - Y0);
+  const show = evt => {
+    const box = svg.getBoundingClientRect();
+    const x = (evt.clientX - box.left) * W / box.width;
+    const n = Math.round(X0 + (x - PL) * (X1 - X0) / (W - PL - PR));
+    const row = data.find(r => r[0] === n);
+    if (!row) return;
+    const ratio = row[1] / 2 / (n ** 3);
+    cross.setAttribute('x1', px(n)); cross.setAttribute('x2', px(n));
+    dot.setAttribute('cx', px(n)); dot.setAttribute('cy', py(ratio));
+    cross.setAttribute('visibility', 'visible'); dot.setAttribute('visibility', 'visible');
+    tip.innerHTML = `n = ${n}<br>A070911 = ${row[1].toLocaleString('en-US')}<br>` +
+      `area / n³ = ${ratio.toFixed(5)}<br>${row[2] ? 'certified' : 'conjectured'}`;
+    tip.style.display = 'block';
+    const left = px(n) * box.width / W;
+    tip.style.left = `${Math.min(left + 12, box.width - tip.offsetWidth - 4)}px`;
+    tip.style.top = `${Math.max(py(ratio) * box.height / H - tip.offsetHeight - 10, 0)}px`;
+  };
+  const hide = () => {
+    tip.style.display = 'none';
+    cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden');
+  };
+  hit.addEventListener('pointermove', show);
+  hit.addEventListener('pointerleave', hide);
+})();
+</script>
+</body>
+</html>

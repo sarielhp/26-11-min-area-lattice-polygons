@@ -5,6 +5,9 @@ vertices: OEIS [A070911](https://oeis.org/A070911) (twice the minimum area) and
 [A063984](https://oeis.org/A063984) (the minimum number of interior lattice
 points, (A070911(n) − n + 2)/2).
 
+A browsable summary is at
+<https://sarielhp.github.io/26-11-min-area-lattice-polygons/>.
+
 ## Programs
 
 Three Rust programs (standard library; `heuristic/` also uses `rayon`):
@@ -48,7 +51,9 @@ mostly optimal.
 
 ## Reproducing the results
 
-Requires Rust (cargo) and Ruby. From the repository root:
+Requires Rust (cargo) and Ruby. [REPRODUCE.md](REPRODUCE.md) is a short guide:
+the hardware we used, how to compile, and what each run takes. From the
+repository root:
 
 ```sh
 scripts/build                              # builds all three programs
