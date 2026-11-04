@@ -1,0 +1,8 @@
+# n = 3
+# A070911(n) = 1 (twice the area)
+# A063984(n) = 0
+# heuristic upper bound, not proven minimal (see data/README.md)
+3
+0 0
+-1 1
+-2 1

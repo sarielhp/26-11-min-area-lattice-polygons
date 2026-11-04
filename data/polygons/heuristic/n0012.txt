@@ -1,0 +1,17 @@
+# n = 12
+# A070911(n) = 48 (twice the area)
+# A063984(n) = 19
+# heuristic upper bound, not proven minimal (see data/README.md)
+12
+0 0
+1 0
+1 1
+0 2
+-3 4
+-5 5
+-8 6
+-9 6
+-9 5
+-8 4
+-5 2
+-3 1

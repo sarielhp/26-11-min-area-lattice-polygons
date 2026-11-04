@@ -1,0 +1,25 @@
+# n = 20
+# A070911(n) = 242 (twice the area)
+# A063984(n) = 112
+# certified minimum (globally optimal; see data/README.md)
+20
+0 0
+3 1
+5 2
+6 3
+7 5
+7 6
+6 8
+5 9
+3 10
+0 11
+-1 11
+-4 10
+-6 9
+-7 8
+-8 6
+-8 5
+-7 3
+-6 2
+-4 1
+-1 0

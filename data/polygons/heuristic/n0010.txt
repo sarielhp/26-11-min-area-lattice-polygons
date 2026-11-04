@@ -1,0 +1,15 @@
+# n = 10
+# A070911(n) = 28 (twice the area)
+# A063984(n) = 10
+# heuristic upper bound, not proven minimal (see data/README.md)
+10
+0 0
+1 0
+1 1
+0 2
+-2 3
+-5 4
+-6 4
+-6 3
+-5 2
+-3 1

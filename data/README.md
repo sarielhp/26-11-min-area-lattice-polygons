@@ -18,6 +18,19 @@ of `certify/`, for n ≤ 300 and n ≤ 511, using upper bounds from the heuristi
 the two runs agree for n ≤ 300. Every polygon was re-validated independently
 of the solver: vertex count, strict convexity, and shoelace area.
 
+## Polygons, one file per n
+
+- [`polygons/certified/`](polygons/certified/): `n0003.txt` … `n0511.txt`, an
+  optimal polygon for every 3 ≤ n ≤ 511.
+- [`polygons/heuristic/`](polygons/heuristic/): `n0003.txt` … `n1000.txt`, the
+  heuristic polygon for every 3 ≤ n ≤ 1000 (an upper bound, not proven minimal;
+  see below).
+
+Each file starts with comment lines giving n, A070911(n), A063984(n) and
+whether the polygon is certified or heuristic, followed by the vertex count
+and one `x y` pair per line, in counterclockwise order. The same polygons are
+also in the single-file tables, one polygon per line.
+
 ## Conjectured values ([`conjectured/`](conjectured/)), not proven minimal
 
 - [`b070911_conjectured.txt`](conjectured/b070911_conjectured.txt), [`b063984_conjectured.txt`](conjectured/b063984_conjectured.txt),

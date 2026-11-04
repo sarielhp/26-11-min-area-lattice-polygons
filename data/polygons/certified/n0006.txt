@@ -1,0 +1,11 @@
+# n = 6
+# A070911(n) = 6 (twice the area)
+# A063984(n) = 1
+# certified minimum (globally optimal; see data/README.md)
+6
+0 0
+1 1
+1 2
+0 2
+-1 1
+-1 0

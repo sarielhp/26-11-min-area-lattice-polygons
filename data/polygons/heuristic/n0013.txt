@@ -1,0 +1,18 @@
+# n = 13
+# A070911(n) = 65 (twice the area)
+# A063984(n) = 27
+# heuristic upper bound, not proven minimal (see data/README.md)
+13
+0 0
+1 0
+2 1
+2 2
+1 4
+0 5
+-2 6
+-3 6
+-5 5
+-6 4
+-6 3
+-5 2
+-3 1

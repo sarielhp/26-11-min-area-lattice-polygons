@@ -1,0 +1,15 @@
+# n = 10
+# A070911(n) = 28 (twice the area)
+# A063984(n) = 10
+# certified minimum (globally optimal; see data/README.md)
+10
+0 0
+2 1
+3 2
+3 3
+2 4
+1 4
+-1 3
+-2 2
+-2 1
+-1 0
