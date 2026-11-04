@@ -2,23 +2,21 @@
 # frozen_string_literal: true
 
 # Reproduces the certified values of A070911 (twice the minimum area) and
-# A063984 (minimum number of interior points) for every number of vertices
-# from 3 up to a chosen largest number, with one validated optimal polygon
-# for each.
+# A063984 (minimum number of interior points) for 3 ≤ n ≤ LARGEST, with one
+# validated optimal polygon for each n.
 #
 #   scripts/certified LARGEST [--threads T] [--jobs J] [--memory-cap-mib M]
 #                             [--spill DIR] [--out DIR]
 #
 # 1. Upper bounds: the modular solver (modular/) computes the heuristic box
-#    optimum for every number of vertices up to LARGEST, as parallel
-#    single-threaded jobs.
-# 2. Certificate: certify/ runs once, up to LARGEST, with those bounds. Its
-#    finished layers go to --spill (about 23 GB for 300 vertices and 337 GB
-#    for 511; use a large disk) and are removed at the end.
+#    optimum for every n ≤ LARGEST, as parallel single-threaded jobs.
+# 2. Certificate: certify/ runs once for all n ≤ LARGEST with those bounds.
+#    Its finished layers go to --spill (about 23 GB for n ≤ 300, 337 GB for
+#    n ≤ 511; use a large disk) and are removed at the end.
 # 3. Tables: OUT/b070911.txt, OUT/b063984.txt and OUT/a070911_polygons.txt,
 #    with every polygon re-validated, then compared with data/.
-# Measured on a 20-thread desktop CPU: up to 300 vertices in about 20
-# minutes, up to 511 vertices in about 10 hours.
+# Measured on a 20-thread desktop CPU: n ≤ 300 in about 20 minutes, n ≤ 511
+# in about 10 hours.
 
 require 'optparse'
 require_relative 'lib/common'
@@ -41,12 +39,12 @@ Repro.build!
 
 out = options[:out]
 FileUtils.mkdir_p(out)
-puts "upper bounds for 3..#{largest} vertices"
+puts "upper bounds for 3 <= n <= #{largest}"
 bounds = ModularJobs.new(File.join(out, 'upper'), jobs: options[:jobs], cap_mib: options[:cap]).run(3..largest)
 upper = File.join(out, 'upper.txt')
 File.write(upper, (3..largest).map { |n| "#{n} #{bounds.fetch(n).fetch('doubled_area')}\n" }.join)
 
-puts "certificate for 3..#{largest} vertices"
+puts "certificate for 3 <= n <= #{largest}"
 polygons = File.join(out, 'polygons')
 summary = File.join(out, 'certify.json')
 ok = system(Repro::BIN[:certify], '--k', largest.to_s, '--threads', options[:threads].to_s, '--upper', upper,
@@ -60,7 +58,7 @@ rows = areas.each_with_index.map do |area2, i|
   Repro.check!(n, area2, points)
   [n, area2, points]
 end
-header = "# Certified minima for 3..#{largest} vertices, reproduced by scripts/certified.\n"
+header = "# Certified minima for 3 <= n <= #{largest}, reproduced by scripts/certified.\n"
 Repro.write_tables(out, '', header, rows)
 puts "tables written to #{out}"
 same = Repro.same?('certified values', rows.to_h { |n, a, _| [n, a] },

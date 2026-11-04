@@ -56,11 +56,11 @@ class ModularJobs
     return unless job
 
     count = job[:count]
-    abort "#{count} vertices: modular solver failed: #{File.read(file(count, 'err'))}" unless status.success?
+    abort "n=#{count}: modular solver failed: #{File.read(file(count, 'err'))}" unless status.success?
     result = JSON.parse(File.read(file(count, 'json')))
     @factor = [@factor, 1.1 * result.fetch('peak_rss_kib') / 1024.0 / model(count)].max
     gb = result['peak_rss_kib'] / 1_048_576.0
-    puts "vertices #{count}: doubled area #{result['doubled_area']}, #{result['search_seconds'].round(1)} s, " \
+    puts "n=#{count}: doubled area #{result['doubled_area']}, #{result['search_seconds'].round(1)} s, " \
          "#{gb.round(2)} GB, #{@running.size} still running"
     [count, result]
   end

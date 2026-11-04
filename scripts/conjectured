@@ -1,9 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Reproduces the heuristic (conjectured) values for a range of numbers of
-# vertices with the modular solver, as parallel single-threaded jobs,
-# largest first.
+# Reproduces the heuristic (conjectured) values for FIRST ≤ n ≤ LAST with the
+# modular solver, as parallel single-threaded jobs, largest n first.
 #
 #   scripts/conjectured FIRST LAST [--jobs J] [--memory-cap-mib M] [--out DIR]
 #
@@ -38,7 +37,7 @@ rows = (first..last).map do |n|
   Repro.check!(n, area2, points)
   [n, area2, points]
 end
-header = "# Heuristic values (upper bounds, not proven minimal) for #{first}..#{last} vertices, " \
+header = "# Heuristic values (upper bounds, not proven minimal) for #{first} <= n <= #{last}, " \
          "reproduced by scripts/conjectured.\n"
 Repro.write_tables(options[:out], '_conjectured', header, rows)
 puts "tables written to #{options[:out]}"

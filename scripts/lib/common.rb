@@ -48,7 +48,7 @@ module Repro
   end
 
   def check!(count, area2, points)
-    abort "#{count} vertices: polygon is not strictly convex or its area is not #{area2}" unless convex_area2(points) == area2
+    abort "n=#{count}: polygon is not strictly convex or its area is not #{area2}" unless convex_area2(points) == area2
   end
 
   # rows: [n, doubled area, points]; writes b070911/b063984/a070911 files.
@@ -76,7 +76,7 @@ module Repro
     common = mine.keys & published.keys
     diff = common.reject { |n| mine[n] == published[n] }
     puts "#{label}: #{common.size} values compared with the published data, #{diff.size} differ"
-    puts "  first differing numbers of vertices: #{diff.first(10).join(', ')}" unless diff.empty?
+    puts "  first differing n: #{diff.first(10).join(', ')}" unless diff.empty?
     diff.empty?
   end
 end
